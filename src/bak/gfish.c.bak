@@ -1,0 +1,175 @@
+/*******************************************************
+ * @file        gfish.c
+ * @author      Dwade
+ * @verson      v1.0
+ * @date        2017-9-21
+ * @brief       逐行解释.def文件,并运行指定命令
+ *******************************************************/
+#include "gfish.h"
+
+void error(char* str);
+
+
+typedef struct{
+	char* vname;    // 变量名指针
+	int   val;      // 保存变量值
+	char* next;     // 下一节点指针
+}ValTypeDef; 
+
+
+/********************************************************
+ * FunctionName:      getNameMemory(char* str);
+ * Description:       动态申请内存,并初始化内容为str指向
+ *                    的变量名
+ * Input:             str  变量名指针 
+ * Output:            NULL
+ *******************************************************/
+char* getNameMemory(char* str)
+{
+	char* p = NULL;
+	if((p = malloc(sizeof(str)) == NULL)){
+		error("get memory ERROR");
+		return NULL;
+	}
+	memset(p, 0, sizeof(p));
+	strcmp(p, str);
+	printf("p=%s\n", p);
+	return p;
+}
+
+//添加链表
+void linkGetMemory(ValTypedDef* head, char* str)
+{
+	ValTypeDef* vp = NULL;
+	ValTypeDef* tmp = NULL;
+	if((vp = malloc(sizeof(ValTypeDef)) == NULL)){
+		error("get mem error");
+		return ;
+	}
+	//　添加变量名
+	char* name = NULL;
+	if((name = getNameMemory(str)) == NULL){
+		error("get name mem error");
+		return ;
+	}
+	// 初始化变量名
+    vp.vname = name;
+	vp.val = 0;
+	if(head->next == NULL){
+		head->next = vp;
+	}
+	else{
+		tmp = head->next;
+		head->next = vp;
+		vp->next = tmp;
+	}
+
+}
+
+void linkAddName(char* na, ValTypeDef* head)
+{
+	
+}
+
+
+/*=========出错处理函数============*/
+void error(char* str)
+{
+	fprintf(stderr,"%s:%s\n",str, strerror(errno));
+}
+
+
+
+/********************************************************
+ * FunctionName:      cutSpace();
+ * Description:       截断字符串头尾空格
+ * Input:             str  待截断字符串指针 
+ * Output:            返回截断后的字符指针
+ *******************************************************/
+char *cutSpace(char *str)
+{
+	char *start = str;
+	char *end = str + strlen(str);
+	while(*start == ' ') start++;
+	while(*end-- == ' ');
+	*(end+1) = '\0';
+	return start;
+}
+
+
+/********************************************************
+ * FunctionName:      gfish(char* str);
+ * Description:       执行gfish 解释器
+ * Input:             str  需要解析的文件名 
+ * Output:            NULL
+ *******************************************************/
+void gfish(char *str)
+{
+	char buffer[1024];
+	int i = 0;
+	int start = 1;
+	int rd = 0;    // 文件是否读完标志
+	
+	/*============创建变量链表============*/
+	ValTypedDef head;
+	head.next = NULL;
+
+	/*============打开文件==============*/
+	int fd = open(str, O_RDONLY);
+	if(-1 == fd){
+		error("open error");
+	}
+
+	/*============读取行数据============*/
+	while(1){
+		i = 0;
+		memset(buffer, 0, sizeof(buffer));
+		do{
+			rd = read(fd, &buffer[i], 1);
+		}while(buffer[i++] != '\n' && rd != 0);
+		if(0 == rd){                            //读到文件末尾退出循环
+			printf("file end\n");
+			return ;  	
+		}
+
+		if(strlen(buffer) <= 1){           // 每行字符少于一个　跳过
+			continue;
+		} 
+		buffer[i-1] = '\0';                // 去回车符
+
+		/*-----------解析指令---------*/
+		char * buf = cutSpace(buffer);   
+		if(0 == strlen(buf)){               // 如果当行全是空格 跳过
+			continue;
+		}
+		char * splitptr = " ";             // 拆分字符串
+		char * oc = strtok(buf, splitptr);
+		char * sc = strtok(NULL, splitptr);
+		char * tc = strtok(NULL, splitptr);
+
+		if( (1 == start) && (!strcmp(oc, "start")) ){      // 解释开始
+			printf("this is start\n");
+			start = 0;
+		}
+		else{
+			if(!strcmp(oc, "end")){             // 解释结束
+				printf("end\n");
+				return ;
+			}
+			else if(!strcmp(oc, "def")){        // def ...
+				printf("%s\n", oc);
+			}
+			else if(!strcmp(oc, "set")){        // set ...
+				printf("%s\n", oc);
+			}
+			else if(!strcmp(oc, "print")){       // print ...
+				printf("%s\n", oc);
+			
+			}
+
+		}
+	}
+	
+
+	close(fd);	
+}
