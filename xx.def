@@ -1,0 +1,10 @@
+ start
+ def i
+ def j
+ set j 10
+ set i 10 
+ 
+ 
+ div i j
+ 
+ end 
